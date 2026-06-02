@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from "recharts";
 import { API_BASE, COGNITO_DOMAIN, LOGOUT_URI, OIDC_CONFIG } from "./config";
 import "./App.css";
+
+// Culori pentru pie chart
+const PIE_COLORS = ["#0e7a6f", "#169989", "#3fb8ad", "#6fcfb0", "#b7efd9"];
 
 function App() {
   const auth = useAuth();
@@ -16,7 +23,6 @@ function App() {
 
   const idToken = auth.user?.id_token;
 
-  // Call backend when we have an idToken
   useEffect(() => {
     if (!idToken) {
       setProfile(null);
@@ -26,7 +32,7 @@ function App() {
 
     setError(null);
 
-    // /api/profile
+    // Apel catre /api/profile
     setLoadingProfile(true);
     fetch(`${API_BASE}/api/profile`, {
       headers: { Authorization: `Bearer ${idToken}` },
@@ -39,7 +45,7 @@ function App() {
       .catch((err) => setError(err.message))
       .finally(() => setLoadingProfile(false));
 
-    // /api/data
+    // Apel catre /api/data
     setLoadingData(true);
     fetch(`${API_BASE}/api/data`, {
       headers: { Authorization: `Bearer ${idToken}` },
@@ -57,11 +63,7 @@ function App() {
     const clientId = OIDC_CONFIG.client_id;
     const logoutUri = LOGOUT_URI;
     const cognitoDomain = COGNITO_DOMAIN;
-
-    // Clear local OIDC user (react-oidc-context)
     auth.removeUser();
-
-    // Redirect to Cognito logout endpoint
     window.location.href =
       `${cognitoDomain}/logout?client_id=${clientId}` +
       `&logout_uri=${encodeURIComponent(logoutUri)}`;
@@ -96,6 +98,9 @@ function App() {
     );
   }
 
+  // Datele pentru grafice — vin din /api/data
+  const chartData = dataResponse?.data || [];
+
   return (
     <div className="app-shell">
       <div className="bg-orb bg-orb-left" />
@@ -115,6 +120,7 @@ function App() {
           </div>
         )}
 
+        {/* Card login/logout */}
         <section className="card status-card">
           {auth.isAuthenticated ? (
             <>
@@ -141,13 +147,15 @@ function App() {
 
         {auth.isAuthenticated && (
           <div className="grid">
+
+            {/* Token */}
             <section className="card">
               <div className="section-head">
                 <h2>Authentication Token</h2>
                 <div className="actions">
                   <button
                     className="btn btn-small btn-ghost"
-                    onClick={() => setShowToken((current) => !current)}
+                    onClick={() => setShowToken((c) => !c)}
                   >
                     {showToken ? "Hide" : "Show"}
                   </button>
@@ -161,6 +169,7 @@ function App() {
               </pre>
             </section>
 
+            {/* Profile */}
             <section className="card">
               <h2>User Profile API Response</h2>
               {loadingProfile ? (
@@ -172,16 +181,97 @@ function App() {
               )}
             </section>
 
+            {/* Tabel cu datele */}
             <section className="card card-wide">
-              <h2>Data API Response</h2>
+              <h2>Device Data Table</h2>
               {loadingData ? (
                 <p className="muted">Loading data...</p>
-              ) : dataResponse ? (
-                <pre className="code-block">{JSON.stringify(dataResponse, null, 2)}</pre>
+              ) : chartData.length > 0 ? (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Device ID</th>
+                      <th>Value</th>
+                      <th>Location</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chartData.map((row) => (
+                      <tr key={row.device_id}>
+                        <td>{row.device_id}</td>
+                        <td>{row.value}</td>
+                        <td>{row.location || "—"}</td>
+                        <td>
+                          <span className={`badge badge-${row.status}`}>
+                            {row.status || "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : (
-                <p className="muted">No data loaded yet.</p>
+                <p className="muted">No data available.</p>
               )}
             </section>
+
+            {/* Grafic 1: Bar Chart - Value per Device */}
+            <section className="card card-wide">
+              <h2>Bar Chart — Value per Device</h2>
+              {loadingData ? (
+                <p className="muted">Loading chart...</p>
+              ) : chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(17,48,83,0.1)" />
+                    <XAxis dataKey="device_id" tick={{ fontSize: 13 }} />
+                    <YAxis tick={{ fontSize: 13 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="#0e7a6f" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="muted">No data for chart.</p>
+              )}
+            </section>
+
+            {/* Grafic 2: Pie Chart - Distributia valorilor */}
+            <section className="card card-wide">
+              <h2>Pie Chart — Value Distribution</h2>
+              {loadingData ? (
+                <p className="muted">Loading chart...</p>
+              ) : chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="device_id"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={({ device_id, percent }) =>
+                        `${device_id} (${(percent * 100).toFixed(0)}%)`
+                      }
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="muted">No data for chart.</p>
+              )}
+            </section>
+
           </div>
         )}
       </main>
