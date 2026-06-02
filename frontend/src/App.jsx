@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { API_BASE, COGNITO_DOMAIN, LOGOUT_URI, OIDC_CONFIG } from "./config";
 import "./App.css";
@@ -147,7 +156,6 @@ function App() {
 
         {auth.isAuthenticated && (
           <div className="grid">
-
             {/* Token */}
             <section className="card">
               <div className="section-head">
@@ -203,9 +211,7 @@ function App() {
                         <td>{row.value}</td>
                         <td>{row.location || "—"}</td>
                         <td>
-                          <span className={`badge badge-${row.status}`}>
-                            {row.status || "—"}
-                          </span>
+                          <span className={`badge badge-${row.status}`}>{row.status || "—"}</span>
                         </td>
                       </tr>
                     ))}
@@ -257,10 +263,7 @@ function App() {
                       }
                     >
                       {chartData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -271,7 +274,6 @@ function App() {
                 <p className="muted">No data for chart.</p>
               )}
             </section>
-
           </div>
         )}
       </main>
