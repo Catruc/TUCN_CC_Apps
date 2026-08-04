@@ -4,11 +4,11 @@
   "private": true,
   "dependencies": {
     "oidc-client-ts": "^3.5.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-oidc-context": "^3.3.1",
-    "web-vitals": "^5.2.0",
-    "recharts": "^2.15.3"
+    "web-vitals": "^6.0.1",
+    "recharts": "^3.10.1"
   },
   "scripts": {
     "start": "vite",
@@ -30,10 +30,10 @@
     ]
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.4",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.2"
+    "@vitejs/plugin-react": "^6.0.5",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
   }
 }
